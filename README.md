@@ -73,3 +73,28 @@ This is a complete working example for Digest auth:
 	    http.HandleFunc("/", authenticator(handle))
 	    http.ListenAndServe(":8080", nil)
     }
+
+
+The following example demonstrates using Digest auth with the secrets loaded from a file and with the Auth interface.
+First create a digest file with `htdigest -c test.htdigest example.com john`, then run this from the same directory:
+
+    package main
+
+    import (
+        "fmt"
+        "net/http"
+        auth "github.com/kig/go-http-auth"
+    )
+
+    func main() {
+	    da := auth.MakeDigestAuth("example.com", auth.HtdigestFileProvider("test.htdigest"))
+	    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+                    user, _ := da.CheckAuth(r)
+                    if user == "" {
+                            da.RequireAuth(w, r)
+                    } else {
+                            fmt.Fprintf(w, "<html><body><h1>Hello, %s!</h1></body></html>", user)
+                    }
+            })
+	    http.ListenAndServe(":8080", nil)
+    }
