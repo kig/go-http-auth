@@ -163,7 +163,7 @@ const DefaultClientCacheSize = 1000
 const DefaultClientCacheTolerance = 100
 
 /* 
- DigestAuthenticator returns an Authenticator which uses HTTP Digest
+ MakeDigestAuth returns an Auth which uses HTTP Digest
  authentication. Arguments:
 
  realm: The authentication realm.
@@ -175,7 +175,7 @@ const DefaultClientCacheTolerance = 100
  clients cache, second is the tolerance for the cache. Default values
  are used if not given.
 */
-func DigestAuthenticator(realm string, secrets SecretProvider, cache ...int) Authenticator {
+func MakeDigestAuth(realm string, secrets SecretProvider, cache ...int) (*DigestAuth) {
 	da := &DigestAuth{
 		Opaque:               RandomKey(),
 		Realm:                realm,
@@ -192,8 +192,27 @@ func DigestAuthenticator(realm string, secrets SecretProvider, cache ...int) Aut
 		da.ClientCacheTolerance = cache[1]
 		fallthrough
 	case len(cache) > 2:
-		panic("Unknown extra arguments to DigestAuthenticator")
+		panic("Unknown extra arguments to MakeDigestAuth")
 	}
+
+	return da
+}
+
+/* 
+ DigestAuthenticator returns an Authenticator which uses HTTP Digest
+ authentication. Arguments:
+
+ realm: The authentication realm.
+
+ secrets: SecretProvider which must return HA1 digests for the same
+ realm as above.
+
+ cache: Optional one or two arguments, first is the size of the
+ clients cache, second is the tolerance for the cache. Default values
+ are used if not given.
+*/
+func DigestAuthenticator(realm string, secrets SecretProvider, cache ...int) Authenticator {
+	da := MakeDigestAuth(realm, secrets, cache...)
 
 	return func(wrapped AuthenticatedHandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {

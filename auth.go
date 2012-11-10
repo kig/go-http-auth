@@ -15,6 +15,11 @@ type AuthenticatedRequest struct {
 	Username string
 }
 
+type Auth interface {
+	CheckAuth(*http.Request) (string, *string)
+	RequireAuth(http.ResponseWriter, *http.Request)
+}
+
 /*
  AuthenticatedHandlerFunc is like http.HandlerFunc, but takes
  AuthenticatedRequest instead of http.Request

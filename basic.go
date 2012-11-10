@@ -65,6 +65,10 @@ func (a *BasicAuth) RequireAuth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("401 Unauthorized\n"))
 }
 
+func MakeBasicAuth(realm string, secrets SecretProvider) (*BasicAuth) {
+	return &BasicAuth{realm, secrets}
+}
+
 /*
  BasicAuthenticator returns a function, which wraps an
  AuthenticatedHandlerFunc converting it to http.HandlerFunc. This
@@ -73,7 +77,7 @@ func (a *BasicAuth) RequireAuth(w http.ResponseWriter, r *http.Request) {
  authenticated username in the AuthenticatedRequest.
 */
 func BasicAuthenticator(realm string, secrets SecretProvider) Authenticator {
-	a := &BasicAuth{Realm: realm, Secrets: secrets}
+	a := MakeBasicAuth(realm, secrets)
 	return func(wrapped AuthenticatedHandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			if username := a.CheckAuth(r); username == "" {
